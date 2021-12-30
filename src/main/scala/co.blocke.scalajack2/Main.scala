@@ -15,6 +15,7 @@ def timeit( fn: ()=>Any, msg: String ) =
 @main def hello: Unit =
   val js:JSON = """[["one","two"], ["three", "four"], ["five", "six"], ["seven", "eight"], ["nine", "ten"]]""".asInstanceOf[JSON]
 
+  /*
   val companionClass = Class.forName("scala.collection.immutable.List$")
   val companionInstance = companionClass.getField("MODULE$").get(companionClass)
   val builderMethod = companionClass.getMethod("newBuilder")
@@ -30,8 +31,10 @@ def timeit( fn: ()=>Any, msg: String ) =
   val writer = new JsonWriter()
   encoder.encode(obj, writer)
   println(writer.getValue)
+  */
 
   /*
+
   timeit(() => {
     val subdecoder = new SeqDecoder(builderMethod, companionInstance, new StringJsonDecoder())
     val decoder = new SeqDecoder(builderMethod, companionInstance, subdecoder)
@@ -41,6 +44,23 @@ def timeit( fn: ()=>Any, msg: String ) =
     val writer = new JsonWriter()
     encoder.encode(obj, writer)
   }, "SJ2")
+  */
+
+  /*
+  val sj2 = co.blocke.scalajack2.ScalaJack()
+  val obj = sj2.read[List[List[String]]](js)
+  println(obj)
+  println(sj2.render(obj))
+  val obj2 = sj2.read[List[List[String]]](js)
+  println(obj2)
+  println(sj2.render(obj2))
+  */
+
+  val sj2 = co.blocke.scalajack2.ScalaJack()
+  timeit( ()=>{
+    val obj = sj2.read[List[List[String]]](js)
+    sj2.render(obj)
+  },"SJ2")
 
   timeit( ()=>{
     val obj = Json.decode(js.asInstanceOf[String].getBytes).to[List[List[String]]].value
@@ -52,5 +72,4 @@ def timeit( fn: ()=>Any, msg: String ) =
     val obj = sj.read[List[List[String]]](js.asInstanceOf[co.blocke.scalajack.json.JSON])
     sj.render(obj)
   }, "ScalaJack" )
-  */
 

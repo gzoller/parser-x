@@ -11,5 +11,6 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "io.bullet" % "borer-core_2.13" % "1.7.2",
       "co.blocke" %% "scalajack" % "7.0.1",
+      "co.blocke" %% "scala-reflection" % "1.1.1",
     	"com.novocode" % "junit-interface" % "0.11" % "test")
   )
