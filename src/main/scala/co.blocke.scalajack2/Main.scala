@@ -1,7 +1,7 @@
 package co.blocke.scalajack2
 
 import json.*
-import typeadapter.*
+import codec.*
 import io.bullet.borer.Json
 import co.blocke.scalajack.ScalaJack
 

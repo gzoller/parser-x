@@ -1,6 +1,6 @@
 package co.blocke.scalajack2
 package model
 
-trait TypeAdapter[T]:
+trait Codec[T]:
   val decoder: Decoder[T]
   val encoder: Encoder[T]

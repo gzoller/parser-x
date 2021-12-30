@@ -1,10 +1,10 @@
 package co.blocke.scalajack2
-package typeadapter
+package codec
 
 import model.*
 import scala.annotation.switch
 
-case class BooleanCodec() extends TypeAdapter[Boolean]:
+case class BooleanCodec() extends Codec[Boolean]:
 
   val decoder = new Decoder[Boolean] {
     private var value: Boolean = false
@@ -28,7 +28,7 @@ case class BooleanCodec() extends TypeAdapter[Boolean]:
 
 //--------------------------------------------------------------------------
 
-case class StringCodec() extends TypeAdapter[String]:
+case class StringCodec() extends Codec[String]:
 
   val decoder = new Decoder[String] {
     private var value: String = null

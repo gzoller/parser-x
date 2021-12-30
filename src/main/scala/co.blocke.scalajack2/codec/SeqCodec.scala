@@ -1,12 +1,12 @@
 package co.blocke.scalajack2
-package typeadapter
+package codec
 
 import model.*
 
 import java.lang.reflect.Method
 import scala.annotation.switch
 
-case class SeqTypeAdapter[ELEM,TO](decoder: Decoder[TO], encoder: Encoder[TO]) extends TypeAdapter[TO]
+case class SeqCodec[ELEM,TO](decoder: Decoder[TO], encoder: Encoder[TO]) extends Codec[TO]
 
 class SeqDecoder[ELEM,List[ELEM]](
                                         builderMethod: Method,
