@@ -8,45 +8,43 @@ import scala.annotation.switch
 
 case class SeqCodec[ELEM,TO](decoder: Decoder[TO], encoder: Encoder[TO]) extends Codec[TO]
 
-class SeqDecoder[ELEM,List[ELEM]](
-                                        builderMethod: Method,
-                                        companionInstance:  Object,
-                                        elemDecoder: Decoder[ELEM]
-                                      ) extends Decoder[List[ELEM]]:
+case class SeqDecoder[ELEM,TO](
+                            builderMethod: Method,
+                            companionInstance:  Object,
+                            elemDecoder: Decoder[ELEM]
+                          ) extends Decoder[TO]:
 
   private var inArray           = false
   private var arrayDone         = false
+  private var result            = null.asInstanceOf[TO]
 
-  private var value: List[ELEM] = null.asInstanceOf[List[ELEM]]
-  private val builder           = builderMethod.invoke(companionInstance).asInstanceOf[scala.collection.mutable.Builder[ELEM,List[ELEM]]]
+  private val builder           = builderMethod.invoke(companionInstance).asInstanceOf[scala.collection.mutable.Builder[ELEM,TO]]
+
+  override def getResult: TO = result
 
   override def reset(): Unit =
     builder.clear()
     inArray   = false
     arrayDone = false
-    value     = null.asInstanceOf[List[ELEM]]
+    result    = null.asInstanceOf[TO]
 
-  // WARNING: This may not work....  For example if we have 2 nested List[T] (same T) they may crash into each other.
-  // Try it...
-  def getValue: List[ELEM] = value
-
-  def emit(token: ParseToken, parser: Parser): EmitResult =
+  def emit(token: ParseToken, parser: Parser): Either[EmitResult, TO] =
     if arrayDone then
       error("Unexpected content after array end", parser)
     else if inArray then
       (elemDecoder.emit(token, parser): @switch) match {
-        case EmitResult.COMPLETE =>
-          builder += elemDecoder.getValue
+        case Right(cooked) =>
+          builder += cooked
           elemDecoder.reset()
-          EmitResult.ACCEPTED
-        case EmitResult.ACCEPTED =>
-          EmitResult.ACCEPTED // do nothing... let element consume token
-        case EmitResult.REJECTED =>
+          Left(EmitResult.ACCEPTED)
+        case Left(EmitResult.ACCEPTED) =>
+          Left(EmitResult.ACCEPTED) // do nothing... let element consume token
+        case Left(EmitResult.REJECTED) =>
           if token == ParseToken.ARRAYEND then
-            value = builder.result()
             inArray = false
             arrayDone = true
-            EmitResult.COMPLETE
+            result = builder.result()
+            Right(builder.result())
           else
             error("Unexpected token "+token, parser)
       }
@@ -54,14 +52,13 @@ class SeqDecoder[ELEM,List[ELEM]](
       token match {
         case ParseToken.ARRAYSTART =>
           inArray = true
-          EmitResult.ACCEPTED
+          Left(EmitResult.ACCEPTED)
         case ParseToken.ARRAYEND =>
-          EmitResult.REJECTED
+          Left(EmitResult.REJECTED)
         case ParseToken.NULL =>
-          value = null.asInstanceOf[List[ELEM]]
           inArray = false
           arrayDone = true
-          EmitResult.COMPLETE
+          Right(null.asInstanceOf[TO])
         case _ =>
           error("Unexpected token "+token, parser)
       }
@@ -69,4 +66,7 @@ class SeqDecoder[ELEM,List[ELEM]](
 
 class SeqEncoder[ELEM,TO](elemEncoder: Encoder[ELEM]) extends Encoder[TO]:
   def encode(payload: TO, writer: Writer[_]): Unit =
-    writer.writeArray[ELEM](payload.asInstanceOf[Seq[ELEM]].toList, elemEncoder)
+    if payload == null then
+      writer.writeNull()
+    else
+      writer.writeArray[ELEM](payload.asInstanceOf[Seq[ELEM]].toList, elemEncoder)

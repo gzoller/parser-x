@@ -13,6 +13,7 @@ def timeit( fn: ()=>Any, msg: String ) =
   println(msg+" :: "+(later-now))
 
 @main def hello: Unit =
+
   val js:JSON = """[["one","two"], ["three", "four"], ["five", "six"], ["seven", "eight"], ["nine", "ten"]]""".asInstanceOf[JSON]
 
   /*
