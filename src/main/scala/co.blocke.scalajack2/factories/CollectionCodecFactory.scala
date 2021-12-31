@@ -14,7 +14,7 @@ object CollectionCodecFactory extends CodecFactory:
       case _ => false
     }
 
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[_] =
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[_] =
     concrete match {
       case c: SeqLikeInfo =>
         val elementInfo = c.elementType
@@ -22,7 +22,7 @@ object CollectionCodecFactory extends CodecFactory:
         val companionInstance = companionClass.getField("MODULE$").get(companionClass)
         val builderMethod = companionClass.getMethod("newBuilder")
         val elementCodec = codecCache.of(elementInfo)
-        SeqCodec(
+        ()=>SeqCodec(
           new SeqDecoder(
             builderMethod,
             companionInstance,

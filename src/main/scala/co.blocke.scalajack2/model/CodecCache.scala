@@ -68,8 +68,8 @@ object CodecCache {
 }
 
 case class CodecCache(
-                             jackFlavor: JackFlavor[_],
-                             factories:  List[CodecFactory]):
+                       jackFlavor: JackFlavor[_],
+                       factories:  List[CodecFactory]):
 
   sealed trait Phase
   case object Uninitialized extends Phase
@@ -78,6 +78,7 @@ case class CodecCache(
 
   val selfCache = this
 
+  /*
   class TypeEntry(tpe: RType):
     @volatile
     private var phase: Phase = Uninitialized
@@ -109,27 +110,76 @@ case class CodecCache(
             }
         }
       attempt.get
+  */
 
-
-  private val typeEntries = new java.util.concurrent.ConcurrentHashMap[RType, TypeEntry]
+//  private val typeEntries = new java.util.HashMap[Int, ()=>Codec[_]]
+  private val typeEntries = scala.collection.mutable.Map.empty[Int, ()=>Codec[_]]
+//  private val typeEntries = new java.util.concurrent.ConcurrentHashMap[RType, ()=>Codec[_]]
+//  private val typeEntries = new java.util.concurrent.ConcurrentHashMap[RType, TypeEntry]
 
   def withFactory(factory: CodecFactory): CodecCache =
     copy(factories = factories :+ factory)
 
   def of(concreteType: RType): Codec[_] =
-    typeEntries.computeIfAbsent(concreteType, ConcreteTypeEntryFactory).codec
+    typeEntries.getOrElse(concreteType.hashCode, {
+      val newEntry = concreteType match {
+        //        case AnySelfRef      => new TypeEntry(AnyRType)
+        //        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
+        case s: SelfRefRType =>
+          val t = RType.of(s.infoClass)
+          val foundFactory = factories.find(_.matches(t)).get
+          foundFactory.makeCodec(t)(selfCache)
+        case s               =>
+          val foundFactory = factories.find(_.matches(s)).get
+          foundFactory.makeCodec(s)(selfCache)
+      }
+      typeEntries.put(concreteType.hashCode, newEntry)
+      newEntry
+    })()
+    /*
+    (typeEntries.get(concreteType.hashCode) match {
+      case null =>
+        val newEntry = concreteType match {
+          //        case AnySelfRef      => new TypeEntry(AnyRType)
+          //        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
+          case s: SelfRefRType =>
+            val t = RType.of(s.infoClass)
+            val foundFactory = factories.find(_.matches(t)).get
+            foundFactory.makeCodec(t)(selfCache)
+          case s =>
+            val foundFactory = factories.find(_.matches(s)).get
+            foundFactory.makeCodec(s)(selfCache)
+        }
+        typeEntries.put(concreteType.hashCode, newEntry)
+        newEntry
+      case found =>
+        found
+    })()
+    */
+
+    /*
+    */
+//    typeEntries.computeIfAbsent(concreteType.hashCode, ConcreteTypeEntryFactory)()
 
   inline def of[T]: Codec[T] =
     of(RType.of[T]).asInstanceOf[Codec[T]]
 
   val self = this
 
-  object ConcreteTypeEntryFactory extends java.util.function.Function[RType, TypeEntry]:
+//  object ConcreteTypeEntryFactory extends java.util.function.Function[RType, TypeEntry]:
+  object ConcreteTypeEntryFactory extends java.util.function.Function[RType, ()=>Codec[_]]:
     private val AnyRType = RType.of[Any]
     private val AnySelfRef = SelfRefRType("scala.Any")
-    override def apply(concrete: RType): TypeEntry =
+    override def apply(concrete: RType): ()=>Codec[_] =
       concrete match {
-        case AnySelfRef      => new TypeEntry(AnyRType)
-        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
-        case s               => new TypeEntry(s)
+//        case AnySelfRef      => new TypeEntry(AnyRType)
+//        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
+        case s: SelfRefRType =>
+          val t = RType.of(s.infoClass)
+          val foundFactory = factories.find(_.matches(t)).get
+          foundFactory.makeCodec(t)(selfCache)
+//        case s               => new TypeEntry(s)
+        case s               =>
+          val foundFactory = factories.find(_.matches(s)).get
+          foundFactory.makeCodec(s)(selfCache)
       }

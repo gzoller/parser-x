@@ -28,10 +28,7 @@ class SeqDecoder[ELEM,List[ELEM]](
 
   // WARNING: This may not work....  For example if we have 2 nested List[T] (same T) they may crash into each other.
   // Try it...
-  def getValue: List[ELEM] =
-    val temp = value
-    reset()
-    temp
+  def getValue: List[ELEM] = value
 
   def emit(token: ParseToken, parser: Parser): EmitResult =
     if arrayDone then
