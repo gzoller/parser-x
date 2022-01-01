@@ -23,6 +23,9 @@ case class JsonWriter() extends Writer[JSON]:
       }
       sb.append(']')
 
+  def writeLong( payload: Long ): Unit =
+    sb.append(payload.toString)
+
   def writeString( payload: String ) =
     if payload == null then
       writeNull()

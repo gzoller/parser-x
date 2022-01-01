@@ -9,14 +9,24 @@ opaque type JSON = String
 
 case class JsonParser[T](jsRaw: JSON, decoder: Decoder[T]) extends Parser:
 
-  private val js = jsRaw.asInstanceOf[String]
+  private val js                   = jsRaw.asInstanceOf[String]
   private val jsChars: Array[Char] = js.toCharArray
-  private var i = 0   // Master index into byte array
+  private var i                    = 0   // Master index into byte array
   private val max: Int             = jsChars.length
-  private var mark = 0
+  private var mark                 = 0
+  private var longAcc: Long        = 0L
+  private var isNeg: Boolean       = false
 
   def getLastString(): String = js.substring(mark,i)
   def getErrorContext(): String = ""+i
+  def getLastLong(): Long =
+    val retLong = if isNeg then
+      longAcc * -1
+    else
+      longAcc
+    longAcc = 0L
+    retLong
+
 
   @tailrec private def consumeString(): Unit =
     if i == max then
@@ -27,6 +37,14 @@ case class JsonParser[T](jsRaw: JSON, decoder: Decoder[T]) extends Parser:
     else
       i += 1
       consumeString()
+
+  @tailrec private def consumeLong(): Unit =
+    if i == max || !jsChars(i).isDigit then
+      ()  // don't move i... sitting on non-digit ready for next parse
+    else
+      longAcc = (longAcc * 10) + (jsChars(i) - '0')
+      i += 1
+      consumeLong()
 
   while( i < max ) {
     ( jsChars(i): @switch ) match {
@@ -77,8 +95,20 @@ case class JsonParser[T](jsRaw: JSON, decoder: Decoder[T]) extends Parser:
         i += 1
       case ',' =>
         i += 1
+      case '-' =>
+        isNeg = true
+        i += 1
+        consumeLong()
+        decoder.emit(ParseToken.LONG, this)
+        // Don't increment i here... we're already sitting on the first non-digit when consumeLong() is done
       case c =>
-        decoder.error("Unexpected character "+c, this)
-        i = max
+        if c.isDigit then
+          isNeg = false
+          longAcc = 0L
+          consumeLong()
+          decoder.emit(ParseToken.LONG, this)
+        else
+          decoder.error("Unexpected character "+c, this)
+          i = max
     }
   }

@@ -22,11 +22,12 @@ object CollectionCodecFactory extends CodecFactory:
         val companionInstance = companionClass.getField("MODULE$").get(companionClass)
         val builderMethod = companionClass.getMethod("newBuilder")
         val elementCodec = codecCache.of(elementInfo)
+        val encoder = new SeqEncoder(elementCodec.encoder)
         ()=>SeqCodec(
           new SeqDecoder(
             builderMethod,
             companionInstance,
             elementCodec.decoder),
-          new SeqEncoder(elementCodec.encoder)
+          encoder
         )
     }

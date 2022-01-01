@@ -16,17 +16,13 @@ case class SeqDecoder[ELEM,TO](
 
   private var inArray           = false
   private var arrayDone         = false
-  private var result            = null.asInstanceOf[TO]
 
   private val builder           = builderMethod.invoke(companionInstance).asInstanceOf[scala.collection.mutable.Builder[ELEM,TO]]
-
-  override def getResult: TO = result
 
   override def reset(): Unit =
     builder.clear()
     inArray   = false
     arrayDone = false
-    result    = null.asInstanceOf[TO]
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, TO] =
     if arrayDone then
@@ -43,7 +39,6 @@ case class SeqDecoder[ELEM,TO](
           if token == ParseToken.ARRAYEND then
             inArray = false
             arrayDone = true
-            result = builder.result()
             Right(builder.result())
           else
             error("Unexpected token "+token, parser)

@@ -14,7 +14,8 @@ def timeit( fn: ()=>Any, msg: String ) =
 
 @main def hello: Unit =
 
-  val js:JSON = """[["one","two"], ["three", "four"], ["five", "six"], ["seven", "eight"], ["nine", "ten"]]""".asInstanceOf[JSON]
+//  val js:JSON = """[["one","two"], ["three", "four"], ["five", "six"], ["seven", "eight"], ["nine", "ten"]]""".asInstanceOf[JSON]
+  val js:JSON = """[[1,2], [31,41], [543,654], [-7,-8], [-91,-101]]""".asInstanceOf[JSON]
 
   /*
   val companionClass = Class.forName("scala.collection.immutable.List$")
@@ -57,20 +58,23 @@ def timeit( fn: ()=>Any, msg: String ) =
   println(sj2.render(obj2))
   */
 
+//  val sj2 = co.blocke.scalajack2.ScalaJack()
+//  val obj = sj2.read[List[List[Int]]](js)
+//  println(sj2.render(obj))
+
   val sj2 = co.blocke.scalajack2.ScalaJack()
   timeit( ()=>{
-    val obj = sj2.read[List[List[String]]](js)
+    val obj = sj2.read[List[List[Int]]](js) //sj2.read[List[List[String]]](js)
     sj2.render(obj)
   },"SJ2")
 
   timeit( ()=>{
-    val obj = Json.decode(js.asInstanceOf[String].getBytes).to[List[List[String]]].value
+    val obj = Json.decode(js.asInstanceOf[String].getBytes).to[List[List[Int]]].value //.to[List[List[String]]].value
     Json.encode(obj).toUtf8String
   }, "borer" )
 
   val sj = ScalaJack()
   timeit( () => {
-    val obj = sj.read[List[List[String]]](js.asInstanceOf[co.blocke.scalajack.json.JSON])
+    val obj = sj.read[List[List[Int]]](js.asInstanceOf[co.blocke.scalajack.json.JSON]) //sj.read[List[List[String]]](js.asInstanceOf[co.blocke.scalajack.json.JSON])
     sj.render(obj)
   }, "ScalaJack" )
-

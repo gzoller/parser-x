@@ -13,7 +13,7 @@ import scala.annotation.switch
  a bit of unnecessary object creation.
  */
 
-object BooleanTypeAdapterFactory extends CodecFactory with Codec[Boolean]:
+object BooleanCodecFactory extends CodecFactory with Codec[Boolean]:
   def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Boolean.infoClass
   def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[Boolean] = ()=>this
 
@@ -31,6 +31,28 @@ object BooleanTypeAdapterFactory extends CodecFactory with Codec[Boolean]:
 
   val encoder = new Encoder[Boolean] {
     def encode(payload: Boolean, writer: Writer[_]): Unit = writer.writeBoolean(payload)
+  }
+
+
+//---------------------------------------------------------------------------------
+
+
+object IntCodecFactory extends CodecFactory with Codec[Int]:
+  def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Int.infoClass
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[Int] = ()=>this
+
+  val decoder = new Decoder[Int] {
+    def emit(token: ParseToken, parser: Parser): Either[EmitResult, Int] =
+      (token: @switch) match {
+        case ParseToken.LONG =>
+          Right(parser.getLastLong().toInt)
+        case _ =>
+          Left(EmitResult.REJECTED)
+      }
+  }
+
+  val encoder = new Encoder[Int] {
+    def encode(payload: Int, writer: Writer[_]): Unit = writer.writeLong(payload)
   }
 
 

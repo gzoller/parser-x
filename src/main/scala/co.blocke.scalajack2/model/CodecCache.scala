@@ -9,17 +9,18 @@ import co.blocke.scala_reflection.impl.SelfRefRType
 
 object CodecCache {
 
+
   val StandardFactories: List[CodecFactory] =
     List(
 //      BigDecimalTypeAdapterFactory,
 //      BigIntTypeAdapterFactory,
 //      BinaryTypeAdapterFactory,
-//      BooleanTypeAdapterFactory,
+      BooleanCodecFactory,
 //      ByteTypeAdapterFactory,
 //      CharTypeAdapterFactory,
 //      DoubleTypeAdapterFactory,
 //      FloatTypeAdapterFactory,
-//      IntTypeAdapterFactory,
+      IntCodecFactory,
 //      LongTypeAdapterFactory,
 //      ShortTypeAdapterFactory,
       StringCodecFactory,
@@ -112,13 +113,11 @@ case class CodecCache(
       attempt.get
   */
 
-//  private val typeEntries = new java.util.HashMap[Int, ()=>Codec[_]]
-  private val typeEntries = scala.collection.mutable.Map.empty[Int, ()=>Codec[_]]
-//  private val typeEntries = new java.util.concurrent.ConcurrentHashMap[RType, ()=>Codec[_]]
-//  private val typeEntries = new java.util.concurrent.ConcurrentHashMap[RType, TypeEntry]
+  private val typeEntries = scala.collection.mutable.LongMap.empty[()=>Codec[_]]
 
   def withFactory(factory: CodecFactory): CodecCache =
     copy(factories = factories :+ factory)
+
 
   def of(concreteType: RType): Codec[_] =
     typeEntries.getOrElse(concreteType.hashCode, {
@@ -136,36 +135,13 @@ case class CodecCache(
       typeEntries.put(concreteType.hashCode, newEntry)
       newEntry
     })()
-    /*
-    (typeEntries.get(concreteType.hashCode) match {
-      case null =>
-        val newEntry = concreteType match {
-          //        case AnySelfRef      => new TypeEntry(AnyRType)
-          //        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
-          case s: SelfRefRType =>
-            val t = RType.of(s.infoClass)
-            val foundFactory = factories.find(_.matches(t)).get
-            foundFactory.makeCodec(t)(selfCache)
-          case s =>
-            val foundFactory = factories.find(_.matches(s)).get
-            foundFactory.makeCodec(s)(selfCache)
-        }
-        typeEntries.put(concreteType.hashCode, newEntry)
-        newEntry
-      case found =>
-        found
-    })()
-    */
-
-    /*
-    */
-//    typeEntries.computeIfAbsent(concreteType.hashCode, ConcreteTypeEntryFactory)()
 
   inline def of[T]: Codec[T] =
     of(RType.of[T]).asInstanceOf[Codec[T]]
 
   val self = this
 
+  /*
 //  object ConcreteTypeEntryFactory extends java.util.function.Function[RType, TypeEntry]:
   object ConcreteTypeEntryFactory extends java.util.function.Function[RType, ()=>Codec[_]]:
     private val AnyRType = RType.of[Any]
@@ -183,3 +159,4 @@ case class CodecCache(
           val foundFactory = factories.find(_.matches(s)).get
           foundFactory.makeCodec(s)(selfCache)
       }
+*/
