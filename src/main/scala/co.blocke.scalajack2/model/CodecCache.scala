@@ -113,7 +113,7 @@ case class CodecCache(
       attempt.get
   */
 
-  private val typeEntries = scala.collection.mutable.LongMap.empty[()=>Codec[_]]
+  private val typeEntries = scala.collection.mutable.LongMap.empty[Codec[_]]
 
   def withFactory(factory: CodecFactory): CodecCache =
     copy(factories = factories :+ factory)
@@ -134,7 +134,7 @@ case class CodecCache(
       }
       typeEntries.put(concreteType.hashCode, newEntry)
       newEntry
-    })()
+    })
 
   inline def of[T]: Codec[T] =
     of(RType.of[T]).asInstanceOf[Codec[T]]

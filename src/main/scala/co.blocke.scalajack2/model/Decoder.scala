@@ -22,7 +22,9 @@ case class ToplevelDecoder[T](wrapped: Decoder[T]) extends Decoder[T]:
         Right(worked.asInstanceOf[T])
       case x => x
     }
-  override def getResult = result
+  override def getResult =
+    wrapped.reset()
+    result
 
 case class DebugDecoder(limit: Int) extends Decoder[Any]:
   private var counter = limit

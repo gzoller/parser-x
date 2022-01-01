@@ -13,69 +13,66 @@ import scala.annotation.switch
  a bit of unnecessary object creation.
  */
 
-object BooleanCodecFactory extends CodecFactory with Codec[Boolean]:
+object BooleanCodecFactory extends CodecFactory with Codec[Boolean] with Decoder[Boolean] with Encoder[Boolean]:
   def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Boolean.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[Boolean] = ()=>this
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[Boolean] = this
 
-  val decoder = new Decoder[Boolean] {
-    def emit(token: ParseToken, parser: Parser): Either[EmitResult, Boolean] =
-      (token: @switch) match {
-        case ParseToken.TRUE =>
-          Right(true)
-        case ParseToken.FALSE =>
-          Right(false)
-        case _ =>
-          Left(EmitResult.REJECTED)
-      }
-  }
+  val decoder: Decoder[Boolean] = this
+  val encoder: Encoder[Boolean] = this
 
-  val encoder = new Encoder[Boolean] {
-    def encode(payload: Boolean, writer: Writer[_]): Unit = writer.writeBoolean(payload)
-  }
+  def emit(token: ParseToken, parser: Parser): Either[EmitResult, Boolean] =
+    (token: @switch) match {
+      case ParseToken.TRUE =>
+        Right(true)
+      case ParseToken.FALSE =>
+        Right(false)
+      case _ =>
+        Left(EmitResult.REJECTED)
+    }
+
+  def encode(payload: Boolean, writer: Writer[_]): Unit = writer.writeBoolean(payload)
 
 
 //---------------------------------------------------------------------------------
 
 
-object IntCodecFactory extends CodecFactory with Codec[Int]:
+object IntCodecFactory extends CodecFactory with Codec[Int] with Decoder[Int] with Encoder[Int]:
   def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Int.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[Int] = ()=>this
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[Int] = this
 
-  val decoder = new Decoder[Int] {
-    def emit(token: ParseToken, parser: Parser): Either[EmitResult, Int] =
-      (token: @switch) match {
-        case ParseToken.LONG =>
-          Right(parser.getLastLong().toInt)
-        case _ =>
-          Left(EmitResult.REJECTED)
-      }
-  }
+  val decoder: Decoder[Int] = this
+  val encoder: Encoder[Int] = this
 
-  val encoder = new Encoder[Int] {
-    def encode(payload: Int, writer: Writer[_]): Unit = writer.writeLong(payload)
-  }
+  def emit(token: ParseToken, parser: Parser): Either[EmitResult, Int] =
+    (token: @switch) match {
+      case ParseToken.LONG =>
+        Right(parser.getLastLong().toInt)
+      case _ =>
+        Left(EmitResult.REJECTED)
+    }
+
+  def encode(payload: Int, writer: Writer[_]): Unit = writer.writeLong(payload)
 
 
 //---------------------------------------------------------------------------------
 
 
-object StringCodecFactory extends CodecFactory with Codec[String]:
+object StringCodecFactory extends CodecFactory with Codec[String] with Decoder[String] with Encoder[String]:
   def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_String.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): ()=>Codec[String] = ()=>this
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[String] = this
 
-  val decoder = new Decoder[String] {
-    def emit(token: ParseToken, parser: Parser): Either[EmitResult, String] =
-      (token: @switch) match {
-        case ParseToken.STRING =>
-          Right(parser.getLastString())
-        case ParseToken.NULL =>
-          Right(null)
-        case _ =>
-          Left(EmitResult.REJECTED)
-      }
-  }
+  val decoder: Decoder[String] = this
+  val encoder: Encoder[String] = this
 
-  val encoder = new Encoder[String] {
-    def encode(payload: String, writer: Writer[_]): Unit = writer.writeString(payload)
-  }
+  def emit(token: ParseToken, parser: Parser): Either[EmitResult, String] =
+    (token: @switch) match {
+      case ParseToken.STRING =>
+        Right(parser.getLastString())
+      case ParseToken.NULL =>
+        Right(null)
+      case _ =>
+        Left(EmitResult.REJECTED)
+    }
+
+  def encode(payload: String, writer: Writer[_]): Unit = writer.writeString(payload)
 

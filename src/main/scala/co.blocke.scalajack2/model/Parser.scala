@@ -6,6 +6,7 @@ enum ParseToken:
 
 trait Parser:
   def getLastString(): String
-  def getErrorContext(): String
   def getLastLong(): Long
+  def getErrorContext(): String
+
 

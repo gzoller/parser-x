@@ -14,6 +14,12 @@ trait JackFlavor[WIRE]:
       CodecCache.StandardFactories
       )
 
+  // For Debugging Parser
+//  final inline def read[T](input: WIRE): T =
+//    val wrapper = DebugDecoder(25)
+//    getParser(input, wrapper)
+//    null.asInstanceOf[T]
+
   final inline def read[T](input: WIRE): T =
     val wrapper = ToplevelDecoder[T](codecCache.of[T].decoder)
     getParser(input, wrapper)
