@@ -10,34 +10,27 @@ case class JsonWriter() extends Writer[JSON]:
   def getValue: JSON = sb.toString.asInstanceOf[JSON]
 
   def writeArray[T]( payload: List[T], elementEncoder: Encoder[T] ) =
-    if payload == null then
-      writeNull()
-    else
-      sb.append('[')
-      var first = true
-      payload.map{ p =>
-        if !first then
-          sb.append(',')
-        first = false
-        elementEncoder.encode(p, this)
-      }
-      sb.append(']')
+    sb.append('[')
+    var first = true
+    payload.map{ p =>
+      if !first then
+        sb.append(',')
+      first = false
+      elementEncoder.encode(p, this)
+    }
+    sb.append(']')
 
-  def writeObject[T]( payload: List[(String,Object,Encoder[_])] ): Unit =
-    if payload == null then
-      writeNull()
-    else
-      sb.append('{')
-      var first = true
-      payload.map{ (label,obj,enc) =>
-        if !first then
-          sb.append(',')
-        first = false
-        writeString(label)
-        sb.append(':')
-        enc.asInstanceOf[Encoder[Any]].encode(obj, this)
-      }
-      sb.append('}')
+  def writeObject[T]( writePayloadFields: ()=>Unit ): Unit =
+    sb.append('{')
+    writePayloadFields()
+    sb.append('}')
+
+  def writeField(isFirst: Boolean, fieldName: String, writeFieldValue: () => Unit): Unit =
+      if !isFirst then
+        sb.append(',')
+      writeString(fieldName)
+      sb.append(':')
+      writeFieldValue()
 
   def writeLong( payload: Long ): Unit =
     sb.append(payload.toString)

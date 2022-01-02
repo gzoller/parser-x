@@ -129,7 +129,9 @@ case class CodecCache(
           val foundFactory = factories.find(_.matches(t)).get
           foundFactory.makeCodec(t)(selfCache)
         case s               =>
+          println("Get Factory: "+s)
           val foundFactory = factories.find(_.matches(s)).get
+          println("Found!")
           foundFactory.makeCodec(s)(selfCache)
       }
       typeEntries.put(concreteType.hashCode, newEntry)

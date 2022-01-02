@@ -7,7 +7,8 @@ package model
  */
 trait Writer[WIRE]:
   def writeArray[T]( payload: List[T], elementEncoder: Encoder[T] ): Unit
-  def writeObject[T]( payload: List[(String,Object,Encoder[_])] ): Unit
+  def writeObject[T]( writePayloadFields: ()=>Unit ): Unit
+  def writeField(isFist: Boolean, fieldName: String, writeFieldValue: () => Unit): Unit
   def writeString( payload: String ): Unit
   def writeLong( payload: Long ): Unit
   def writeNull(): Unit

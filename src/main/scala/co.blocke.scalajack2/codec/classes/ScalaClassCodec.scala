@@ -91,10 +91,17 @@ trait ScalaClassCodec[T](implicit codecCache: CodecCache) extends ClassCodecBase
 
   val encoder: Encoder[T] = new Encoder{
     def encode(payload: T, writer: Writer[_]): Unit =
-      writer.writeObject(
-        orderedFieldNames
-          .map { fieldName => // Strictly-speaking JSON has no order, but it's clean to write out in constructor order.
-            val oneField = fieldMembersByName(fieldName)
-            (fieldName, oneField.info.valueOf(payload), oneField.valueCodec.encoder.asInstanceOf[Encoder[Any]])
-          })
+      if payload == null then
+        writer.writeNull()
+      else
+        var isFirst = true
+        writer.writeObject( ()=>{
+          orderedFieldNames
+            .map { fieldName => // Strictly-speaking JSON has no order, but it's clean to write out in constructor order.
+              val oneField = fieldMembersByName(fieldName)
+              val target = oneField.info.valueOf(payload)
+              val enc = oneField.valueCodec.encoder.asInstanceOf[Encoder[Any]]
+              writer.writeField(isFirst, fieldName, () => {enc.encode(target, writer)})
+              isFirst = false
+            }})
   }

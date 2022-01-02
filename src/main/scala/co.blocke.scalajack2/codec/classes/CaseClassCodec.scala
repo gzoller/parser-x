@@ -41,3 +41,4 @@ case class CaseClassCodec[T](
 
 //  def _read_updateFieldMembers( fmbn: Map[String, ClassFieldMember[_,_]]): ScalaClassTypeAdapter[T] =
 //    this.copy(fieldMembersByName = fmbn)
+
