@@ -5,6 +5,9 @@ import codec.*
 import io.bullet.borer.Json
 import co.blocke.scalajack.ScalaJack
 
+case class Person(name: String, age: Int)
+
+
 def timeit( fn: ()=>Any, msg: String ) =
   val now = System.currentTimeMillis()
   for (i <- 1 to 10000)
@@ -15,66 +18,38 @@ def timeit( fn: ()=>Any, msg: String ) =
 @main def hello: Unit =
 
 //  val js:JSON = """[["one","two"], ["three", "four"], ["five", "six"], ["seven", "eight"], ["nine", "ten"]]""".asInstanceOf[JSON]
-  val js:JSON = """[[1,2], [31,41], [543,654], [-7,-8], [-91,-101]]""".asInstanceOf[JSON]
+//  val js:JSON = """[[1,2], [31,41], [543,654], [-7,-8], [-91,-101]]""".asInstanceOf[JSON]
 
-  /*
-  val companionClass = Class.forName("scala.collection.immutable.List$")
-  val companionInstance = companionClass.getField("MODULE$").get(companionClass)
-  val builderMethod = companionClass.getMethod("newBuilder")
-
-  val strCodec = new StringCodec()
-  val subdecoder = new SeqDecoder(builderMethod, companionInstance, strCodec.decoder)
-  val decoder = new SeqDecoder(builderMethod, companionInstance, subdecoder)
-  JsonParser(js, decoder)
-  val obj = decoder.getValue.asInstanceOf[List[List[String]]]
-  println(obj)
-
-  val encoder = new SeqEncoder[List[String],List[List[String]]](new SeqEncoder(strCodec.encoder))
-  val writer = new JsonWriter()
-  encoder.encode(obj, writer)
-  println(writer.getValue)
-  */
-
-  /*
-
-  timeit(() => {
-    val subdecoder = new SeqDecoder(builderMethod, companionInstance, new StringJsonDecoder())
-    val decoder = new SeqDecoder(builderMethod, companionInstance, subdecoder)
-    JsonParser(js, decoder)
-    val obj:List[List[String]] = decoder.getValue
-    val encoder = new SeqEncoder[List[String],List[List[String]]](new SeqEncoder(new StringJsonEncoder()))
-    val writer = new JsonWriter()
-    encoder.encode(obj, writer)
-  }, "SJ2")
-  */
-
-  /*
-  val sj2 = co.blocke.scalajack2.ScalaJack()
-  val obj = sj2.read[List[List[String]]](js)
-  println(obj)
-  println(sj2.render(obj))
-  val obj2 = sj2.read[List[List[String]]](js)
-  println(obj2)
-  println(sj2.render(obj2))
-  */
+  val js: JSON = """{"name":"Greg","age":55}""".asInstanceOf[JSON]
 
 //  val sj2 = co.blocke.scalajack2.ScalaJack()
-//  val obj = sj2.read[List[List[Int]]](js)
+//  val obj = sj2.read[Person](js)
+//  println(obj)
 //  println(sj2.render(obj))
 
   val sj2 = co.blocke.scalajack2.ScalaJack()
   timeit( ()=>{
-    val obj = sj2.read[List[List[Int]]](js) //sj2.read[List[List[String]]](js)
+    val obj = sj2.read[Person](js)
     sj2.render(obj)
   },"SJ2")
 
-  timeit( ()=>{
-    val obj = Json.decode(js.asInstanceOf[String].getBytes).to[List[List[Int]]].value //.to[List[List[String]]].value
-    Json.encode(obj).toUtf8String
-  }, "borer" )
+//  timeit( ()=>{
+//    val obj = Json.decode(js.asInstanceOf[String].getBytes).to[Person].value
+//    val obj = Json.decode(js.asInstanceOf[String].getBytes).to[List[List[Int]]].value
+//    Json.encode(obj).toUtf8String
+//  }, "borer" )
 
   val sj = ScalaJack()
   timeit( () => {
-    val obj = sj.read[List[List[Int]]](js.asInstanceOf[co.blocke.scalajack.json.JSON]) //sj.read[List[List[String]]](js.asInstanceOf[co.blocke.scalajack.json.JSON])
+    val obj = sj.read[Person](js.asInstanceOf[co.blocke.scalajack.json.JSON])
     sj.render(obj)
   }, "ScalaJack" )
+
+inline def setBit( in: Long, index: Int ): Long = in | 1 << index
+
+val CHANGE_ANNO = "co.blocke.scalajack.Change"
+val OPTIONAL_ANNO = "co.blocke.scalajack.Optional"
+val IGNORE = "co.blocke.scalajack.Ignore"
+val DB_KEY = "co.blocke.scalajack.DBKey"
+val DB_COLLECTION = "co.blocke.scalajack.Collection"
+val SJ_CAPTURE  = "co.blocke.scalajack.SJCapture"

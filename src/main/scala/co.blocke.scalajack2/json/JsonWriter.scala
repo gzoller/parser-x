@@ -23,6 +23,22 @@ case class JsonWriter() extends Writer[JSON]:
       }
       sb.append(']')
 
+  def writeObject[T]( payload: List[(String,Object,Encoder[_])] ): Unit =
+    if payload == null then
+      writeNull()
+    else
+      sb.append('{')
+      var first = true
+      payload.map{ (label,obj,enc) =>
+        if !first then
+          sb.append(',')
+        first = false
+        writeString(label)
+        sb.append(':')
+        enc.asInstanceOf[Encoder[Any]].encode(obj, this)
+      }
+      sb.append('}')
+
   def writeLong( payload: Long ): Unit =
     sb.append(payload.toString)
 

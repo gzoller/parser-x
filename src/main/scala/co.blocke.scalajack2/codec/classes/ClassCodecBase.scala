@@ -8,17 +8,19 @@ import co.blocke.scala_reflection.info._
 import scala.collection.mutable
 
 // For case classes and Java/Scala plain classes, but not traits
-trait ClassTypeAdapterBase[T] extends Codec[T]: // with Classish:
+trait ClassCodecBase[T] extends Codec[T]: // with Classish:
   val info:               RType
-  val argsTemplate:       Array[Object]
-  val fieldBitsTemplate:  mutable.BitSet
+  val defaultArgMap:      Map[Int,Object]
+  val fieldBitsInitial:   Long  // bitfield with default arg bits preset
+  val allFieldBits:       Long  // refrence for what fully-populated object looks like
+  val numArgs:            Int   // 63 fields max
   val isSJCapture:        Boolean
   val fieldMembersByName: Map[String, ClassFieldMember[_,_]]
   val isCaseClass:        Boolean = false
   val orderedFieldNames:  List[String]
   val dbCollectionName:   Option[String]
 
-//  def dbKeys: List[ClassFieldMember[_,_]] =
-//    fieldMembersByName.values.toList
-//      .filter(_.dbKeyIndex.isDefined)
-//      .sortBy(_.dbKeyIndex.get)
+  def dbKeys: List[ClassFieldMember[_,_]] =
+    fieldMembersByName.values.toList
+      .filter(_.dbKeyIndex.isDefined)
+      .sortBy(_.dbKeyIndex.get)

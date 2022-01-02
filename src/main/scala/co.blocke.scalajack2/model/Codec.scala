@@ -5,3 +5,5 @@ trait Codec[T]:
   //def resolved: Codec[T] = this // Might be something else during Lazy construction
   val decoder: Decoder[T]
   val encoder: Encoder[T]
+
+  def defaultValue: Option[T] = None

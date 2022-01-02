@@ -33,14 +33,14 @@ object CodecCache {
 //      ArrayTypeAdapterFactory,
 //      EnumTypeAdapterFactory,
 //      UUIDTypeAdapterFactory,
-      CollectionCodecFactory
+      CollectionCodecFactory,
 
       // WARNING: These two must precede CaseClassTypeAdapter in this list or all
       //     ValueClasses will be interpreted as case classes, and case objects
       //     will likewise be hidden (interpreted as regular classes).
 //      SealedTraitTypeAdapterFactory,
 //      ValueClassTypeAdapterFactory,
-//      ScalaClassTypeAdapterFactory,
+      ScalaClassCodecFactory
 
 //      TraitTypeAdapterFactory,
 //      AnyTypeAdapterFactory,

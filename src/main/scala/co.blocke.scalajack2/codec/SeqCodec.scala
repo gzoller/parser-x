@@ -47,14 +47,12 @@ case class SeqCodec[ELEM,TO](builderMethod: Method,
             this.reset()
             inArray = true
             Left(EmitResult.ACCEPTED)
-          case ParseToken.ARRAYEND =>
-            Left(EmitResult.REJECTED)
           case ParseToken.NULL =>
             inArray = false
             arrayDone = true
             Right(null.asInstanceOf[TO])
           case _ =>
-            error("Unexpected token "+token, parser)
+            Left(EmitResult.REJECTED)
         }
   }
 
