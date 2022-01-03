@@ -9,6 +9,7 @@ trait Decoder[T]:
   def error( msg: String, parser: Parser ) = throw new Exception(msg+" @ "+parser.getErrorContext())
   def reset(): Unit = {}
   def getResult: T = ???  // undefined except for top-most level call (in JackFlavor) to retrieve fianl value
+  val isPrimitive = false
 
 
 // This Decoder derivation will capture te successful completed value to be returned.

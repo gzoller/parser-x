@@ -126,13 +126,9 @@ case class CodecCache(
         //        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
         case s: SelfRefRType =>
           val t = RType.of(s.infoClass)
-          val foundFactory = factories.find(_.matches(t)).get
-          foundFactory.makeCodec(t)(selfCache)
+          factories.find(_.matches(t)).get.makeCodec(t)(selfCache)
         case s               =>
-          println("Get Factory: "+s)
-          val foundFactory = factories.find(_.matches(s)).get
-          println("Found!")
-          foundFactory.makeCodec(s)(selfCache)
+          factories.find(_.matches(s)).get.makeCodec(s)(selfCache)
       }
       typeEntries.put(concreteType.hashCode, newEntry)
       newEntry

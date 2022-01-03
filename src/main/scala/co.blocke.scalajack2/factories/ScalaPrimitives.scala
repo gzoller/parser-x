@@ -19,6 +19,7 @@ object BooleanCodecFactory extends CodecFactory with Codec[Boolean] with Decoder
 
   val decoder: Decoder[Boolean] = this
   val encoder: Encoder[Boolean] = this
+  val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, Boolean] =
     (token: @switch) match {
@@ -42,6 +43,7 @@ object IntCodecFactory extends CodecFactory with Codec[Int] with Decoder[Int] wi
 
   val decoder: Decoder[Int] = this
   val encoder: Encoder[Int] = this
+  val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, Int] =
     (token: @switch) match {
@@ -63,6 +65,7 @@ object StringCodecFactory extends CodecFactory with Codec[String] with Decoder[S
 
   val decoder: Decoder[String] = this
   val encoder: Encoder[String] = this
+  val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, String] =
     (token: @switch) match {
