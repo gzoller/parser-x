@@ -77,7 +77,7 @@ case class CodecCache(
   case object Initializing extends Phase
   case class Initialized(codecAttempt: Try[Codec[_]]) extends Phase
 
-  val selfCache = this
+//  val selfCache = this
 
   /*
   class TypeEntry(tpe: RType):
@@ -113,23 +113,33 @@ case class CodecCache(
       attempt.get
   */
 
+  // The actual cache...
   private val typeEntries = scala.collection.mutable.LongMap.empty[Codec[_]]
 
   def withFactory(factory: CodecFactory): CodecCache =
     copy(factories = factories :+ factory)
 
-
   def of(concreteType: RType): Codec[_] =
+
     typeEntries.getOrElse(concreteType.hashCode, {
+      val myFactory = factories.find(_.matches(concreteType)).get
+
+      // Insert a SelfCodec that resolves itself later. This will be immediately replaced in the cache
+      // after main codec creation below.  Only self-references will retain a pointer to SelfCodecs,
+      // which lazily resolve encoder/decoder after the "real" Codec is created.
+      val selfCodec = SelfCodec(concreteType, this)
+      typeEntries.put(concreteType.hashCode, selfCodec)
+
       val newEntry = concreteType match {
         //        case AnySelfRef      => new TypeEntry(AnyRType)
         //        case s: SelfRefRType => new TypeEntry(RType.of(s.infoClass))
-        case s: SelfRefRType =>
-          val t = RType.of(s.infoClass)
-          factories.find(_.matches(t)).get.makeCodec(t)(selfCache)
+//        case s: SelfRefRType =>
+//          val t = RType.of(s.infoClass)
+//          factories.find(_.matches(t)).get.makeCodec(t)(selfCache)
         case s               =>
-          factories.find(_.matches(s)).get.makeCodec(s)(selfCache)
+          myFactory.makeCodec(s)(this)
       }
+
       typeEntries.put(concreteType.hashCode, newEntry)
       newEntry
     })

@@ -8,42 +8,54 @@ import co.blocke.scala_reflection.*
 import scala.annotation.switch
 import scala.collection.mutable
 
-trait ScalaClassCodec[T](implicit codecCache: CodecCache) extends ClassCodecBase[T]:
+trait ScalaClassCodec[T](implicit codecCache: CodecCache)
+    extends ClassCodecBase[T]:
 
-  val typeMembersByName:  Map[String, TypeMemberInfo]
+  val typeMembersByName: Map[String, TypeMemberInfo]
 
   val isSJCapture = info.asInstanceOf[ClassInfo].hasMixin(SJ_CAPTURE)
 
-  def _read_createInstance(args: Array[Object], foundBits: Long, captured: java.util.HashMap[String, _]): T
+  def _read_createInstance(
+      args: Array[Object],
+      foundBits: Long,
+      captured: java.util.HashMap[String, _]
+    ): T
 //  def _read_updateFieldMembers( fmbn: Map[String, ClassFieldMember[_,_]]): ScalaClassTypeAdapter[T]
 
-  val decoder: Decoder[T] = new Decoder[T] {
-    private var inObject             = false
-    private var objectDone           = false
-    private val args: Array[Object]  = Array.fill(numArgs){null.asInstanceOf[Object]}
-    private var fieldBits: Long      = fieldBitsInitial
+  lazy val decoder: Decoder[T] = newDecoder()
+
+  override def newDecoder(): Decoder[T] = new Decoder[T] {
+    private var inObject = false
+    private var objectDone = false
+
+    private val args: Array[Object] = Array.fill(numArgs) {
+      null.asInstanceOf[Object]
+    }
+    private var fieldBits: Long = fieldBitsInitial
     private var expectLabel: Boolean = true
-    private var fieldIndex: Int      = -1
-    private var fieldCodec: Codec[_]  = null
+    private var fieldIndex: Int = -1
+    private var fieldCodec: Codec[_] = null
 
     override def reset(): Unit =
-      inObject   = false
+      inObject = false
       objectDone = false
-      fieldBits  = fieldBitsInitial
+      fieldBits = fieldBitsInitial
       fieldIndex = -1
       fieldCodec = null
-      defaultArgMap.map{ (i,obj) => args(i) = obj }
+      defaultArgMap.map { (i, obj) => args(i) = obj }
 
     def emit(token: ParseToken, parser: Parser): Either[EmitResult, T] =
-      if objectDone then
-        error("Unexpected content after object end", parser)
+      if objectDone then error("Unexpected content after object end", parser)
       else if inObject then
         if expectLabel then
           (token: @switch) match {
             case ParseToken.STRING =>
               val fieldName = parser.getLastString()
               val fieldMember = fieldMembersByName.get(fieldName).getOrElse(???)
-              fieldCodec = fieldMember.valueCodec
+              fieldCodec = fieldMember.valueCodec match {
+                case s: SelfCodec[_] => s.copy() // recursion for SelfCodecs
+                case f               => f
+              }
               fieldIndex = fieldMember.info.index
               fieldBits = setBit(fieldBits, fieldIndex)
               expectLabel = false
@@ -61,16 +73,18 @@ trait ScalaClassCodec[T](implicit codecCache: CodecCache) extends ClassCodecBase
               error("Unexpected token where field label expected", parser)
           }
         else
-          (fieldCodec.decoder.emit(token,parser): @switch) match {
+          (fieldCodec.decoder.emit(token, parser): @switch) match {
             case Right(cooked) =>
               args(fieldIndex) = cooked.asInstanceOf[Object]
               fieldCodec.decoder.reset()
               expectLabel = true
               Left(EmitResult.ACCEPTED)
             case Left(EmitResult.ACCEPTED) =>
-              Left(EmitResult.ACCEPTED) // do nothing... let element consume token
+              Left(
+                EmitResult.ACCEPTED
+              ) // do nothing... let element consume token
             case Left(EmitResult.REJECTED) =>
-              error("Unexpected token in object "+token, parser)
+              error("Unexpected token in object " + token, parser)
           }
       else
         token match {
@@ -89,19 +103,23 @@ trait ScalaClassCodec[T](implicit codecCache: CodecCache) extends ClassCodecBase
         }
   }
 
-  val encoder: Encoder[T] = new Encoder{
+  lazy val encoder: Encoder[T] = new Encoder {
+
     def encode(payload: T, writer: Writer[_]): Unit =
-      if payload == null then
-        writer.writeNull()
+      if payload == null then writer.writeNull()
       else
         var isFirst = true
-        writer.writeObject( ()=>{
-          orderedFieldNames
-            .map { fieldName => // Strictly-speaking JSON has no order, but it's clean to write out in constructor order.
-              val oneField = fieldMembersByName(fieldName)
-              val target = oneField.info.valueOf(payload)
-              val enc = oneField.valueCodec.encoder.asInstanceOf[Encoder[Any]]
-              writer.writeField(isFirst, fieldName, () => {enc.encode(target, writer)})
-              isFirst = false
-            }})
+        writer.writeObject(() => {
+          orderedFieldNames.map { fieldName => // Strictly-speaking JSON has no order, but it's clean to write out in constructor order.
+            val oneField = fieldMembersByName(fieldName)
+            val target = oneField.info.valueOf(payload)
+            val enc = oneField.valueCodec.encoder.asInstanceOf[Encoder[Any]]
+            writer.writeField(
+              isFirst,
+              fieldName,
+              () => { enc.encode(target, writer) }
+            )
+            isFirst = false
+          }
+        })
   }

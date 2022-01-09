@@ -19,7 +19,9 @@ case class JsonParser[T](jsRaw: JSON, initialDecoder: Decoder[T]) extends Parser
 
   private var decoder = initialDecoder
 
-  def setDecoder(dec: Decoder[_]) = decoder = dec
+  def pos: Int = i
+
+  //def setDecoder(dec: Decoder[_]) = decoder = dec
   def getLastString(): String = js.substring(mark,i)
   def getErrorContext(): String = ""+i
   def getLastLong(): Long =

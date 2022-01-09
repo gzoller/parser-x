@@ -23,7 +23,7 @@ object ScalaClassCodecFactory extends CodecFactory:
   inline def bakeFieldMembersByName(
                                      fields: List[FieldInfo],
                                      constructor: Constructor[_],
-                                     infoClass: Class[_] )(implicit taCache: CodecCache
+                                     infoClass: Class[_] )(implicit codecCache: CodecCache
                                    ): (Map[String,ClassFieldMember[_,_]], Long, Long, Int, Map[Int,Object], List[String])  =
 
     // Filter out any ignored fields and re-index them all
@@ -35,9 +35,13 @@ object ScalaClassCodecFactory extends CodecFactory:
 
     val fieldsByName = fieldsWeCareAbout.map { f =>
       val fieldValueCodec = f.fieldType match {
-        case _: TypeSymbolInfo => taCache.of(impl.PrimitiveType.Scala_Any) // Any unresolved type symbols must be considered Any
+        case _: TypeSymbolInfo => codecCache.of(impl.PrimitiveType.Scala_Any) // Any unresolved type symbols must be considered Any
         case t =>
-          taCache.of(t) match {
+//          if t.isInstanceOf[ScalaCaseClassInfo] then
+//            println("t: "+t)
+//            println("Cache: "+codecCache.of(t))
+//            System.exit(0)
+          codecCache.of(t) match {
             // In certain situations, value classes need to be unwrapped, i.e. use the type adapter of their member.
 //            case vta: ValueClassTypeAdapter[_,_] if f.index < constructor.getParameterTypes().size =>   // value class in constructor
 //              val constructorParamClass = constructor.getParameterTypes()(f.index).getClass
@@ -60,9 +64,9 @@ object ScalaClassCodecFactory extends CodecFactory:
       if f.defaultValue.isDefined then
         defaultArgs(f.index) = f.defaultValue.get
         bits = setBit(bits, f.index)
-      else if fieldValueCodec.defaultValue.isDefined then
-        defaultArgs(f.index) = fieldValueCodec.defaultValue.get.asInstanceOf[Object]
-        bits = setBit(bits, f.index)
+//      else if fieldValueCodec.defaultValue.isDefined then
+//        defaultArgs(f.index) = fieldValueCodec.defaultValue.get.asInstanceOf[Object]
+//        bits = setBit(bits, f.index)
 
       val fieldMapName = f.annotations.get(CHANGE_ANNO).map(_("name"))
       val typeAdapter = fieldMapName.getOrElse(f.name) -> ClassFieldMember(

@@ -10,6 +10,7 @@ trait Decoder[T]:
   def reset(): Unit = {}
   def getResult: T = ???  // undefined except for top-most level call (in JackFlavor) to retrieve fianl value
   val isPrimitive = false
+  val count: Int = 0
 
 
 // This Decoder derivation will capture te successful completed value to be returned.

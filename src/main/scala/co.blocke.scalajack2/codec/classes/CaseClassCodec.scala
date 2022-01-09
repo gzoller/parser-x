@@ -8,18 +8,21 @@ import co.blocke.scala_reflection._
 import scala.collection.mutable
 
 case class CaseClassCodec[T](
-                                    info:               RType,
-                                    fieldMembersByName: Map[String, ClassFieldMember[_,_]],
-                                    defaultArgMap:      Map[Int,Object],
-                                    fieldBitsInitial:   Long,
-                                    allFieldBits:       Long,
-                                    numArgs:            Int,
-                                    typeMembersByName:  Map[String, TypeMemberInfo],
-                                    orderedFieldNames:  List[String],
-                                    dbCollectionName:   Option[String] = None
-                                  )(implicit codecCache: CodecCache) extends ScalaClassCodec[T]:
+    info:               RType,
+    fieldMembersByName: Map[String, ClassFieldMember[_,_]],
+    defaultArgMap:      Map[Int,Object],
+    fieldBitsInitial:   Long,
+    allFieldBits:       Long,
+    numArgs:            Int,
+    typeMembersByName:  Map[String, TypeMemberInfo],
+    orderedFieldNames:  List[String],
+    dbCollectionName:   Option[String] = None
+  )(implicit codecCache: CodecCache) extends ScalaClassCodec[T]:
 
   override val isCaseClass = true
+
+  override def toString(): String = this.getClass.getName+"\n  fields: \n"
+    + fieldMembersByName.map((name,member)=>s"    $name -> ${member.valueCodec.getClass.getName}").mkString("\n")
 
   private val classInfo = info.asInstanceOf[ScalaCaseClassInfo]
   private val constructor = classInfo.infoClass.getConstructors.head // <-- NOTE: head here isn't bullet-proof, but a generally safe assumption for case classes.  (Req because of arg typing mess.)

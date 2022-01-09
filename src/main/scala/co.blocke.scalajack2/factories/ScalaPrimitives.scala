@@ -13,13 +13,24 @@ import scala.annotation.switch
  a bit of unnecessary object creation.
  */
 
-object BooleanCodecFactory extends CodecFactory with Codec[Boolean] with Decoder[Boolean] with Encoder[Boolean]:
-  def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Boolean.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[Boolean] = this
+object BooleanCodecFactory
+    extends CodecFactory
+    with Codec[Boolean]
+    with Decoder[Boolean]
+    with Encoder[Boolean]:
 
-  val decoder: Decoder[Boolean] = this
-  val encoder: Encoder[Boolean] = this
-  val isPrimitive = true
+  def matches(concrete: RType): Boolean =
+    concrete.infoClass == PrimitiveType.Scala_Boolean.infoClass
+
+  def makeCodec(
+      concrete: RType
+    )(implicit
+      codecCache: CodecCache
+    ): Codec[Boolean] = this
+
+  lazy val decoder: Decoder[Boolean] = this
+  lazy val encoder: Encoder[Boolean] = this
+  override val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, Boolean] =
     (token: @switch) match {
@@ -31,19 +42,26 @@ object BooleanCodecFactory extends CodecFactory with Codec[Boolean] with Decoder
         Left(EmitResult.REJECTED)
     }
 
-  def encode(payload: Boolean, writer: Writer[_]): Unit = writer.writeBoolean(payload)
-
+  def encode(payload: Boolean, writer: Writer[_]): Unit =
+    writer.writeBoolean(payload)
 
 //---------------------------------------------------------------------------------
 
+object IntCodecFactory
+    extends CodecFactory
+    with Codec[Int]
+    with Decoder[Int]
+    with Encoder[Int]:
 
-object IntCodecFactory extends CodecFactory with Codec[Int] with Decoder[Int] with Encoder[Int]:
-  def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_Int.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[Int] = this
+  def matches(concrete: RType): Boolean =
+    concrete.infoClass == PrimitiveType.Scala_Int.infoClass
 
-  val decoder: Decoder[Int] = this
-  val encoder: Encoder[Int] = this
-  val isPrimitive = true
+  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[Int] =
+    this
+
+  lazy val decoder: Decoder[Int] = this
+  lazy val encoder: Encoder[Int] = this
+  override val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, Int] =
     (token: @switch) match {
@@ -55,17 +73,26 @@ object IntCodecFactory extends CodecFactory with Codec[Int] with Decoder[Int] wi
 
   def encode(payload: Int, writer: Writer[_]): Unit = writer.writeLong(payload)
 
-
 //---------------------------------------------------------------------------------
 
+object StringCodecFactory
+    extends CodecFactory
+    with Codec[String]
+    with Decoder[String]
+    with Encoder[String]:
 
-object StringCodecFactory extends CodecFactory with Codec[String] with Decoder[String] with Encoder[String]:
-  def matches(concrete: RType): Boolean = concrete.infoClass == PrimitiveType.Scala_String.infoClass
-  def makeCodec(concrete: RType)(implicit codecCache: CodecCache): Codec[String] = this
+  def matches(concrete: RType): Boolean =
+    concrete.infoClass == PrimitiveType.Scala_String.infoClass
 
-  val decoder: Decoder[String] = this
-  val encoder: Encoder[String] = this
-  val isPrimitive = true
+  def makeCodec(
+      concrete: RType
+    )(implicit
+      codecCache: CodecCache
+    ): Codec[String] = this
+
+  lazy val decoder: Decoder[String] = this
+  lazy val encoder: Encoder[String] = this
+  override val isPrimitive = true
 
   def emit(token: ParseToken, parser: Parser): Either[EmitResult, String] =
     (token: @switch) match {
@@ -77,5 +104,5 @@ object StringCodecFactory extends CodecFactory with Codec[String] with Decoder[S
         Left(EmitResult.REJECTED)
     }
 
-  def encode(payload: String, writer: Writer[_]): Unit = writer.writeString(payload)
-
+  def encode(payload: String, writer: Writer[_]): Unit =
+    writer.writeString(payload)
